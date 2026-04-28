@@ -1,0 +1,109 @@
+name: Deploy Homolog
+
+on:
+  push:
+    branches: [homolog, main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [deploy-homolog]
+
+concurrency:
+  group: deploy-homolog
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy on VM
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+
+    steps:
+      - name: Checkout infra
+        uses: actions/checkout@v4
+
+      - name: Checkout programatico-api
+        uses: actions/checkout@v4
+        with:
+          repository: Caioramos010/programatico-api
+          path: programatico-api
+          ref: ${{ github.event.client_payload.api_ref || 'main' }}
+
+      - name: Checkout programatico-web
+        uses: actions/checkout@v4
+        with:
+          repository: Caioramos010/programatico-web
+          path: programatico-web
+          ref: ${{ github.event.client_payload.web_ref || 'main' }}
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync repository to VM
+        run: |
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='target' \
+            --exclude='dist' \
+            --exclude='.env*' \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new" \
+            ./ ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/programatico/
+
+      - name: Write .env on VM
+        env:
+          PUBLIC_URL: http://${{ secrets.VM_HOST }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "cat > /opt/programatico/.env" <<EOF
+          PUBLIC_URL=$PUBLIC_URL
+          DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD
+          DB_PASSWORD=$DB_PASSWORD
+          JWT_SECRET=$JWT_SECRET
+          ADMIN_EMAIL=$ADMIN_EMAIL
+          ADMIN_USERNAME=$ADMIN_USERNAME
+          ADMIN_PASSWORD=$ADMIN_PASSWORD
+          MAIL_USERNAME=$MAIL_USERNAME
+          MAIL_PASSWORD=$MAIL_PASSWORD
+          EOF
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "chmod 600 /opt/programatico/.env"
+
+      - name: Build & up via docker compose
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} bash <<'REMOTE'
+          set -euo pipefail
+          cd /opt/programatico
+          docker compose -f docker-compose.yml -f docker-compose.homolog.yml --env-file .env pull --ignore-pull-failures || true
+          docker compose -f docker-compose.yml -f docker-compose.homolog.yml --env-file .env up -d --build --remove-orphans
+          docker image prune -f
+          REMOTE
+
+      - name: Wait for API healthcheck
+        run: |
+          set -e
+          for i in {1..40}; do
+            if curl -fsS --max-time 5 http://${{ secrets.VM_HOST }}/api/auth/health >/dev/null 2>&1 \
+               || curl -fsS --max-time 5 http://${{ secrets.VM_HOST }}/ >/dev/null 2>&1; then
+              echo "OK — homolog respondendo em http://${{ secrets.VM_HOST }}"
+              exit 0
+            fi
+            echo "  ...aguardando subida ($i/40)"
+            sleep 6
+          done
+          echo "::error::Homolog não respondeu em 4 min — checar logs com 'docker compose logs' na VM"
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "cd /opt/programatico && docker compose -f docker-compose.yml -f docker-compose.homolog.yml logs --tail=80" || true
+          exit 1

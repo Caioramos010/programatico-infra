@@ -1,0 +1,62 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: programatico-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: programatico
+      MYSQL_USER: programatico
+      MYSQL_PASSWORD: programatico123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./programatico-api
+      dockerfile: Dockerfile
+    container_name: programatico-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/programatico
+      SPRING_DATASOURCE_USERNAME: programatico
+      SPRING_DATASOURCE_PASSWORD: programatico123
+      JWT_SECRET: programatico-api-secret-key-minimo-256-bits-para-hs256-seguro
+      JWT_EXPIRATION_MS: "86400000"
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:80,http://admin.localhost,http://admin.localhost:80
+      FRONTEND_URL: http://localhost
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@programatico.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./programatico-web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    container_name: programatico-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  mysql_data:

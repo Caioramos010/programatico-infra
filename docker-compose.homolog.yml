@@ -1,0 +1,76 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: programatico-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: programatico
+      MYSQL_USER: programatico
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports: !reset []
+    expose:
+      - "3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+  api:
+    build:
+      context: ./programatico-api
+      dockerfile: Dockerfile
+    container_name: programatico-api
+    restart: always
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/programatico
+      SPRING_DATASOURCE_USERNAME: programatico
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: "86400000"
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CORS_ALLOWED_ORIGINS: ${PUBLIC_URL}
+      FRONTEND_URL: ${PUBLIC_URL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx1g -XX:+ExitOnOutOfMemoryError"
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
+
+  web:
+    build:
+      context: ./programatico-web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    container_name: programatico-web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+volumes:
+  mysql_data:

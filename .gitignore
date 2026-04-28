@@ -1,0 +1,20 @@
+# Secrets — apenas .env.*.example pode ser commitado
+.env
+.env.local
+.env.homolog
+.env.production
+.env.*.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts
+**/target/
+**/dist/
+**/node_modules/
+
+# Logs
+*.log
