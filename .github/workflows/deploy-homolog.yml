@@ -56,7 +56,7 @@ jobs:
 
       - name: Write .env on VM
         env:
-          PUBLIC_URL: http://${{ secrets.VM_HOST }}
+          PUBLIC_URL: https://homolog.programatico.online
           DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
