@@ -27,14 +27,14 @@ jobs:
         with:
           repository: Caioramos010/programatico-api
           path: programatico-api
-          ref: ${{ github.event.client_payload.api_ref || 'main' }}
+          ref: ${{ github.event.client_payload.api_ref || 'homolog' }}
 
       - name: Checkout programatico-web
         uses: actions/checkout@v4
         with:
           repository: Caioramos010/programatico-web
           path: programatico-web
-          ref: ${{ github.event.client_payload.web_ref || 'main' }}
+          ref: ${{ github.event.client_payload.web_ref || 'homolog' }}
 
       - name: Setup SSH
         run: |
