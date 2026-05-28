@@ -27,14 +27,14 @@ jobs:
         with:
           repository: Caioramos010/programatico-api
           path: programatico-api
-          ref: ${{ github.event.client_payload.api_ref || 'main' }}
+          ref: ${{ github.event.client_payload.api_ref || 'homolog' }}
 
       - name: Checkout programatico-web
         uses: actions/checkout@v4
         with:
           repository: Caioramos010/programatico-web
           path: programatico-web
-          ref: ${{ github.event.client_payload.web_ref || 'main' }}
+          ref: ${{ github.event.client_payload.web_ref || 'homolog' }}
 
       - name: Setup SSH
         run: |
@@ -63,8 +63,10 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_HOST: smtp.resend.com
+          MAIL_USERNAME: resend
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_FROM: noreply@programatico.online
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "cat > /opt/programatico/.env" <<EOF
@@ -75,8 +77,10 @@ jobs:
           ADMIN_EMAIL=$ADMIN_EMAIL
           ADMIN_USERNAME=$ADMIN_USERNAME
           ADMIN_PASSWORD=$ADMIN_PASSWORD
+          MAIL_HOST=$MAIL_HOST
           MAIL_USERNAME=$MAIL_USERNAME
           MAIL_PASSWORD=$MAIL_PASSWORD
+          MAIL_FROM=$MAIL_FROM
           EOF
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "chmod 600 /opt/programatico/.env"
