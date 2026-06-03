@@ -68,6 +68,7 @@ jobs:
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           MAIL_FROM: noreply@programatico.online
           CORS_ALLOWED_ORIGINS: https://programatico.online,https://www.programatico.online,https://homolog.programatico.online,https://admin.programatico.online,https://admin-homolog.programatico.online
+          SEED_CONTENT_ENABLED: "true"
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "cat > /opt/programatico/.env" <<EOF
@@ -83,6 +84,7 @@ jobs:
           MAIL_PASSWORD=$MAIL_PASSWORD
           MAIL_FROM=$MAIL_FROM
           CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+          SEED_CONTENT_ENABLED=$SEED_CONTENT_ENABLED
           EOF
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "chmod 600 /opt/programatico/.env"
