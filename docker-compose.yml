@@ -43,6 +43,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@programatico.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

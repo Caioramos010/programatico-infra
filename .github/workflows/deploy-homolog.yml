@@ -72,6 +72,7 @@ jobs:
           ABACATEPAY_API_KEY: ${{ secrets.ABACATEPAY_API_KEY }}
           ABACATEPAY_WEBHOOK_SECRET: ${{ secrets.ABACATEPAY_WEBHOOK_SECRET }}
           ABACATEPAY_PRODUCT_ID: ${{ secrets.ABACATEPAY_PRODUCT_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "cat > /opt/programatico/.env" <<EOF
@@ -91,6 +92,7 @@ jobs:
           ABACATEPAY_API_KEY=$ABACATEPAY_API_KEY
           ABACATEPAY_WEBHOOK_SECRET=$ABACATEPAY_WEBHOOK_SECRET
           ABACATEPAY_PRODUCT_ID=$ABACATEPAY_PRODUCT_ID
+          OPENAI_API_KEY=$OPENAI_API_KEY
           EOF
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "chmod 600 /opt/programatico/.env"
