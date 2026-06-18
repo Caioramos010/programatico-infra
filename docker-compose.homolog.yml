@@ -34,7 +34,7 @@ services:
       - "8080"
     environment:
       SPRING_PROFILES_ACTIVE: mysql
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/programatico
+      SPRING_DATASOURCE_URL: "jdbc:mysql://db:3306/programatico?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci"
       SPRING_DATASOURCE_USERNAME: programatico
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
@@ -45,6 +45,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_FROM: ${MAIL_FROM}
       SEED_CONTENT_ENABLED: ${SEED_CONTENT_ENABLED:-false}
+      SEED_LOGICA_ENABLED: ${SEED_LOGICA_ENABLED:-true}
       ABACATEPAY_API_KEY: ${ABACATEPAY_API_KEY}
       ABACATEPAY_WEBHOOK_SECRET: ${ABACATEPAY_WEBHOOK_SECRET}
       ABACATEPAY_PRODUCT_ID: ${ABACATEPAY_PRODUCT_ID}
@@ -54,7 +55,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
-      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx1g -XX:+ExitOnOutOfMemoryError"
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx1g -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8"
     depends_on:
       db:
         condition: service_healthy
