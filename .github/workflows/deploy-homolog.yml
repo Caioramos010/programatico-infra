@@ -68,7 +68,10 @@ jobs:
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           MAIL_FROM: noreply@programatico.online
           CORS_ALLOWED_ORIGINS: https://programatico.online,https://www.programatico.online,https://homolog.programatico.online,https://admin.programatico.online,https://admin-homolog.programatico.online
-          SEED_CONTENT_ENABLED: "true"
+          # Seed de amostra desativado (auditoria 2026-07-11): num rebuild de banco
+          # zerado ele criava uma segunda trilha empatada em displayOrder=1 e o app
+          # podia entregar a trilha errada. A trilha real vem do SEED_LOGICA_ENABLED.
+          SEED_CONTENT_ENABLED: "false"
           ABACATEPAY_API_KEY: ${{ secrets.ABACATEPAY_API_KEY }}
           ABACATEPAY_WEBHOOK_SECRET: ${{ secrets.ABACATEPAY_WEBHOOK_SECRET }}
           ABACATEPAY_PRODUCT_ID: ${{ secrets.ABACATEPAY_PRODUCT_ID }}
